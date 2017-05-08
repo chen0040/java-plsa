@@ -578,7 +578,7 @@ public class StopWordRemoval {
         Collections.addAll(stopWords, defaultStopWords);
     }
 
-    public void ResetStopWords() {
+    public void resetStopWords() {
         stopWords.clear();
     }
 
@@ -586,11 +586,11 @@ public class StopWordRemoval {
         stopWords.add(w);
     }
 
-    public void AddStopWords(String[] words) {
+    public void addStopWords(String[] words) {
         Collections.addAll(stopWords, words);
     }
 
-    public void AddStopWords(Iterator<String> words) {
+    public void addStopWords(Iterator<String> words) {
         while (words.hasNext()) {
             stopWords.add(words.next());
         }
