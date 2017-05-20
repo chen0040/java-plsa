@@ -34,6 +34,10 @@ public class SparseMatrix {
       this.dim3 = 1;
    }
 
+   public static boolean isZero(double value) {
+      return Math.abs(value) < EPSILON;
+   }
+
 
    public double get(int index1, int index2, int index3) {
       return values.getOrDefault(index(index1, index2, index3), 0.0);
@@ -41,7 +45,7 @@ public class SparseMatrix {
 
    public void set(int index1, int index2, int index3, double value){
       int index = index(index1, index2, index3);
-      if(Math.abs(value) < EPSILON){
+      if(isZero(value)){
          values.remove(index);
       } else {
          values.put(index, value);

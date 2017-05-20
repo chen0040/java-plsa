@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -11,20 +12,21 @@ import java.util.Map;
  */
 public class BasicDocument implements Document {
 
-    private final String text;
-    private final Map<String, Integer> wordCounts = new HashMap<>();
-    public BasicDocument(String text, List<String> words){
-        this.text = text;
-        for(String word : words) {
-            wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
-        }
+    private final Map<Integer, Integer> wordCounts;
+    private final List<Integer> words;
+
+    public BasicDocument(Map<Integer, Integer> wordCounts){
+        this.wordCounts = wordCounts;
+
+        this.words = new ArrayList<>(wordCounts.keySet());
     }
 
-    public String getText(){
-        return text;
-    }
-
-    public Map<String, Integer> getWordCounts(){
+    public Map<Integer, Integer> getWordCounts(){
         return wordCounts;
+    }
+
+
+    @Override public List<Integer> words() {
+        return words;
     }
 }
