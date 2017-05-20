@@ -167,7 +167,7 @@ public class pLSA {
 
     }
 
-    public List<Map.Entry<Integer, Double>> getTopRankingTopics4Doc(int doc, int limits){
+    public List<TupleTwo<Integer, Double>> getTopRankingTopics4Doc(int doc, int limits){
         final double[] probs = new double[topicCount];
         List<Integer> topic_orders = new ArrayList<Integer>();
         for(int topic = 0; topic < topicCount; ++topic){
@@ -175,13 +175,13 @@ public class pLSA {
             topic_orders.add(topic);
         }
 
-        Collections.sort(topic_orders, (t1, t2) -> Double.compare(probs[t2], probs[t1]));
+        topic_orders.sort((t1, t2) -> Double.compare(probs[t2], probs[t1]));
 
-        List<Map.Entry<Integer, Double>> topRankedTopics = new ArrayList<Map.Entry<Integer, Double>>();
+        List<TupleTwo<Integer, Double>> topRankedTopics = new ArrayList<>();
         limits = Math.min(limits, topicCount);
         for(int i = 0; i < limits; ++i){
             int topic = topic_orders.get(i);
-            topRankedTopics.add(new AbstractMap.SimpleEntry<>(topic, probs[topic]));
+            topRankedTopics.add(new TupleTwo<>(topic, probs[topic]));
         }
         return topRankedTopics;
     }

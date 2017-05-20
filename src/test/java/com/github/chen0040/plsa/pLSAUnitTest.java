@@ -84,11 +84,11 @@ public class pLSAUnitTest {
       }
 
       for(int doc = 0; doc < method.getDocCount(); ++doc){
-         List<Map.Entry<Integer, Double>> topRankedTopics = method.getTopRankingTopics4Doc(doc, 3);
+         List<TupleTwo<Integer, Double>> topRankedTopics = method.getTopRankingTopics4Doc(doc, 3);
          System.out.print("Doc "+doc+": ");
-         for(Map.Entry<Integer, Double> entry : topRankedTopics){
-            int topic = entry.getKey();
-            double prob = entry.getValue();
+         for(TupleTwo<Integer, Double> entry : topRankedTopics){
+            int topic = entry._1();
+            double prob = entry._2();
             System.out.print(topic+"(" + prob +"), ");
          }
          System.out.println();
