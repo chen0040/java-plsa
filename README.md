@@ -3,6 +3,18 @@ Package provides the java implementation of scoreabilistic latent semantic analy
 
 [![Build Status](https://travis-ci.org/chen0040/java-plsa.svg?branch=master)](https://travis-ci.org/chen0040/java-plsa) [![Coverage Status](https://coveralls.io/repos/github/chen0040/java-plsa/badge.svg?branch=master)](https://coveralls.io/github/chen0040/java-plsa?branch=master)
 
+# Install
+
+Add the following dependency to your POM file:
+
+```xml
+<dependency>
+  <groupId>com.github.chen0040</groupId>
+  <artifactId>java-plsa</artifactId>
+  <version>1.0.1</version>
+</dependency>
+```
+
 # Usage
  
  The sample code belows illustrates how to perform topic modelling using pLSA

@@ -1,9 +1,6 @@
 package com.github.chen0040.plsa;
 
-import com.github.chen0040.data.text.BasicVocabulary;
-import com.github.chen0040.data.text.LowerCase;
-import com.github.chen0040.data.text.PorterStemmer;
-import com.github.chen0040.data.text.Vocabulary;
+import com.github.chen0040.data.text.*;
 import com.github.chen0040.data.utils.TupleTwo;
 import lombok.AccessLevel;
 import lombok.Getter;
