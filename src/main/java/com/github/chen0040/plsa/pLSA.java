@@ -93,33 +93,41 @@ public class pLSA {
         this.removeNumbers = that.removeNumbers;
     }
 
-    private double[][] clone(double[][] rhs){
-        if(rhs==null) return null;
-        int m = rhs.length;
-        double[][] clone = new double[m][];
-        for(int i=0; i < m; ++i){
-            clone[i] = clone(rhs[i]);
-        }
-        return clone;
-    }
 
-    private double[] clone(double[] rhs){
-        if(rhs == null) return null;
-        int m = rhs.length;
-        double[] clone = new double[m];
-        for(int i=0; i < m; ++i){
-            clone[i] = rhs[i];
-        }
-        return clone;
-    }
+    private List<Document> buildVocab(List<String> docs){
+        final StopWordRemoval stopWordRemoval = new StopWordRemoval();
+        final LowerCase lowerCase = new LowerCase();
+        final PorterStemmer stemmer = new PorterStemmer();
 
-    private List<Document> buildVocab(List<Map<String, Integer>> documents){
+        stopWordRemoval.setRemoveIPAddress(removeIpAddress);
+        stopWordRemoval.setRemoveNumbers(removeNumbers);
+
+        List<Map<String, Integer>> wordCountMap = docs.parallelStream().map(text -> {
+
+            List<String> words = BasicTokenizer.doTokenize(text);
+
+            words = lowerCase.filter(words);
+            words = stopWordRemoval.filter(words);
+
+            if(stemmerEnabled) {
+                words = stemmer.filter(words);
+            }
+
+            Map<String, Integer> wordCounts = new HashMap<>();
+            for(String word : words){
+                wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+            }
+
+            return wordCounts;
+
+        }).collect(Collectors.toList());
+
         vocabulary = new BasicVocabulary();
 
-        int m = documents.size();
+        int m = wordCountMap.size();
         Map<String, Integer> uniqueWords = new HashMap<>();
         for(int i=0; i < m; ++i){
-            Map<String, Integer> doc = documents.get(i);
+            Map<String, Integer> doc = wordCountMap.get(i);
             for(Map.Entry<String, Integer> entry : doc.entrySet()){
                 uniqueWords.put(entry.getKey(), uniqueWords.getOrDefault(entry.getKey(), 0) + entry.getValue());
             }
@@ -142,7 +150,7 @@ public class pLSA {
 
         List<Document> result = new ArrayList<>();
         for(int i=0; i < m; ++i){
-            Map<String, Integer> doc = documents.get(i);
+            Map<String, Integer> doc = wordCountMap.get(i);
             Map<Integer, Integer> wordCount = new HashMap<>();
             for(Map.Entry<String, Integer> entry : doc.entrySet()){
                 String word = entry.getKey();
@@ -150,7 +158,7 @@ public class pLSA {
                     wordCount.put(positions.get(word), entry.getValue());
                 }
             }
-            result.add(new BasicDocument(wordCount));
+            result.add(new BasicDocument(wordCount, docs.get(i)));
         }
 
         return result;
@@ -217,34 +225,9 @@ public class pLSA {
 
     public void fit(List<String> docs){
 
-        final StopWordRemoval stopWordRemoval = new StopWordRemoval();
-        final LowerCase lowerCase = new LowerCase();
-        final PorterStemmer stemmer = new PorterStemmer();
 
-        stopWordRemoval.setRemoveIPAddress(removeIpAddress);
-        stopWordRemoval.setRemoveNumbers(removeNumbers);
 
-        List<Map<String, Integer>> wordCountMap = docs.parallelStream().map(text -> {
-
-            List<String> words = BasicTokenizer.doTokenize(text);
-
-            words = lowerCase.filter(words);
-            words = stopWordRemoval.filter(words);
-
-            if(stemmerEnabled) {
-                words = stemmer.filter(words);
-            }
-
-            Map<String, Integer> wordCounts = new HashMap<>();
-            for(String word : words){
-                wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
-            }
-
-            return wordCounts;
-
-        }).collect(Collectors.toList());
-
-        List<Document> documents = buildVocab(wordCountMap);
+        List<Document> documents = buildVocab(docs);
 
         docCount = documents.size();
         wordCount = vocabulary.getLength();
@@ -359,9 +342,10 @@ public class pLSA {
                            * probability_word_given_topic.get(topic, word);
                    sum += value;
                }
+               
 
                double logSum = Math.log(sum);
-               if(!Double.isNaN(logSum)) continue;
+               if(Double.isNaN(logSum)) continue;
                L += entry.getValue() * logSum;
            }
        }

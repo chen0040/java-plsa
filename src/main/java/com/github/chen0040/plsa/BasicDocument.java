@@ -14,9 +14,11 @@ public class BasicDocument implements Document {
 
     private final Map<Integer, Integer> wordCounts;
     private final List<Integer> words;
+    private String text;
 
-    public BasicDocument(Map<Integer, Integer> wordCounts){
+    public BasicDocument(Map<Integer, Integer> wordCounts, String text){
         this.wordCounts = wordCounts;
+        this.text = text;
 
         this.words = new ArrayList<>(wordCounts.keySet());
     }
@@ -28,5 +30,9 @@ public class BasicDocument implements Document {
 
     @Override public List<Integer> wordIndices() {
         return words;
+    }
+
+    public String getContent(){
+        return text;
     }
 }
