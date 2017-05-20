@@ -1,5 +1,5 @@
 # java-plsa
-Package provides the java implementation of probabilistic latent semantic analysis (pLSA)
+Package provides the java implementation of scoreabilistic latent semantic analysis (pLSA)
 
 [![Build Status](https://travis-ci.org/chen0040/java-plsa.svg?branch=master)](https://travis-ci.org/chen0040/java-plsa) [![Coverage Status](https://coveralls.io/repos/github/chen0040/java-plsa/badge.svg?branch=master)](https://coveralls.io/github/chen0040/java-plsa?branch=master)
 
@@ -26,8 +26,8 @@ for(int topic = 0; topic < method.getTopicCount(); ++topic){
   System.out.println("Top Ranked Document:");
   for(TupleTwo<Document, Double> entry : topRankedDocs){
      Document doc = entry._1();
-     double prob = entry._2();
-     System.out.print(doc.docIndex()+"(" + prob +"), ");
+     double score = entry._2();
+     System.out.print(doc.docIndex()+"(" + score +"), ");
      System.out.println(doc.content());
   }
   System.out.println();
@@ -35,8 +35,8 @@ for(int topic = 0; topic < method.getTopicCount(); ++topic){
   System.out.println("Top Ranked Words:");
   for(TupleTwo<String, Double> entry : topRankedWords){
      String word = entry._1();
-     double prob = entry._2();
-     System.out.print(word+"(" + prob +"), ");
+     double score = entry._2();
+     System.out.print(word+"(" + score +"), ");
   }
   System.out.println();
 }
@@ -48,8 +48,8 @@ for(int doc = 0; doc < method.getDocCount(); ++doc){
   System.out.print("Doc "+doc+": ");
   for(TupleTwo<Integer, Double> entry : topRankedTopics){
      int topic = entry._1();
-     double prob = entry._2();
-     System.out.print(topic+"(" + prob +"), ");
+     double score = entry._2();
+     System.out.print(topic+"(" + score + "), ");
   }
   System.out.println();
 }

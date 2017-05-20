@@ -56,8 +56,8 @@ public class pLSAUnitTest {
       pLSA method = new pLSA();
       method.setStemmerEnabled(true);
 
-      method.setMaxIters(10);
-      method.setMaxVocabularySize(1000);
+      method.setMaxIters(1);
+      method.setMaxVocabularySize(10);
       method.fit(docs);
 
       for(int topic = 0; topic < method.getTopicCount(); ++topic){
