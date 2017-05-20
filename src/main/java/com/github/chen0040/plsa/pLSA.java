@@ -62,6 +62,8 @@ public class pLSA {
     private boolean removeIpAddress = true;
     private boolean stemmerEnabled = false;
 
+    private List<Document> documents;
+
     public pLSA(){
 
     }
@@ -94,7 +96,7 @@ public class pLSA {
     }
 
 
-    private List<Document> buildVocab(List<String> docs){
+    private List<Document> buildDocuments(List<String> docs){
         final StopWordRemoval stopWordRemoval = new StopWordRemoval();
         final LowerCase lowerCase = new LowerCase();
         final PorterStemmer stemmer = new PorterStemmer();
@@ -158,7 +160,7 @@ public class pLSA {
                     wordCount.put(positions.get(word), entry.getValue());
                 }
             }
-            result.add(new BasicDocument(wordCount, docs.get(i)));
+            result.add(new BasicDocument(wordCount, docs.get(i), i));
         }
 
         return result;
@@ -184,50 +186,47 @@ public class pLSA {
         return topRankedTopics;
     }
 
-    public List<Map.Entry<Integer, Double>> getTopRankingDocs4Topic(int topic, int limits){
+    public List<TupleTwo<Document, Double>> getTopRankingDocs4Topic(int topic, int limits){
         final double[] probs = new double[docCount];
-        List<Integer> doc_orders = new ArrayList<>();
-        for(int doc = 0; doc < docCount; ++doc){
-            probs[doc] = probability_doc_given_topic.get(topic, doc);
-            doc_orders.add(doc);
+        List<Document> doc_orders = new ArrayList<>();
+        for(int docIndex = 0; docIndex < docCount; ++docIndex){
+            probs[docIndex] = probability_doc_given_topic.get(topic, docIndex);
+            doc_orders.add(documents.get(docIndex));
         }
 
-        doc_orders.sort((a, b) -> -Double.compare(probs[a], probs[b]));
+        doc_orders.sort((a, b) -> -Double.compare(probs[a.docIndex()], probs[b.docIndex()]));
 
-        List<Map.Entry<Integer, Double>> topRankedDocs = new ArrayList<>();
+        List<TupleTwo<Document, Double>> topRankedDocs = new ArrayList<>();
         limits = Math.min(limits, docCount);
         for(int i = 0; i < limits; ++i){
-            int doc = doc_orders.get(i);
-            topRankedDocs.add(new AbstractMap.SimpleEntry<>(doc, probs[doc]));
+            Document doc = doc_orders.get(i);
+            topRankedDocs.add(new TupleTwo<>(doc, probs[doc.docIndex()]));
         }
         return topRankedDocs;
     }
 
-    public List<Map.Entry<Integer, Double>> getTopRankingWords4Topic(int topic, int limits){
+    public List<TupleTwo<String, Double>> getTopRankingWords4Topic(int topic, int limits){
         final double[] probs = new double[wordCount];
-        List<Integer> word_orders = new ArrayList<Integer>();
-        for(int word = 0; word < wordCount; ++word){
-            probs[word] = probability_word_given_topic.get(topic, word);
-            word_orders.add(word);
+        List<String> word_orders = new ArrayList<>();
+        for(int wordIndex = 0; wordIndex < wordCount; ++wordIndex){
+            probs[wordIndex] = probability_word_given_topic.get(topic, wordIndex);
+            word_orders.add(wordAtIndex(wordIndex));
         }
 
-        Collections.sort(word_orders, (t1, t2) -> Double.compare(probs[t2], probs[t1]));
+        word_orders.sort((t1, t2) -> Double.compare(probs[vocabulary.indexOf(t2)], probs[vocabulary.indexOf(t1)]));
 
-        List<Map.Entry<Integer, Double>> topRankedWords = new ArrayList<>();
+        List<TupleTwo<String, Double>> topRankedWords = new ArrayList<>();
         limits = Math.min(limits, wordCount);
         for(int i = 0; i < limits; ++i){
-            int word = word_orders.get(i);
-            topRankedWords.add(new AbstractMap.SimpleEntry<>(word, probs[word]));
+            String word = word_orders.get(i);
+            topRankedWords.add(new TupleTwo<>(word, probs[vocabulary.indexOf(word)]));
         }
         return topRankedWords;
 
     }
 
     public void fit(List<String> docs){
-
-
-
-        List<Document> documents = buildVocab(docs);
+        documents = buildDocuments(docs);
 
         docCount = documents.size();
         wordCount = vocabulary.getLength();
@@ -342,7 +341,7 @@ public class pLSA {
                            * probability_word_given_topic.get(topic, word);
                    sum += value;
                }
-               
+
 
                double logSum = Math.log(sum);
                if(Double.isNaN(logSum)) continue;

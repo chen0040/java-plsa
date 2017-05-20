@@ -1,6 +1,7 @@
 package com.github.chen0040.plsa;
 
 
+import com.github.chen0040.data.utils.TupleTwo;
 import com.github.chen0040.plsa.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,24 +61,24 @@ public class pLSAUnitTest {
       method.fit(docs);
 
       for(int topic = 0; topic < method.getTopicCount(); ++topic){
-         List<Map.Entry<Integer, Double>> topRankedDocs = method.getTopRankingDocs4Topic(topic, 3);
-         List<Map.Entry<Integer, Double>> topRankedWords = method.getTopRankingWords4Topic(topic, 3);
+         List<TupleTwo<Document, Double>> topRankedDocs = method.getTopRankingDocs4Topic(topic, 3);
+         List<TupleTwo<String, Double>> topRankedWords = method.getTopRankingWords4Topic(topic, 3);
 
          System.out.println("Topic "+topic+": ");
 
          System.out.println("Top Ranked Document:");
-         for(Map.Entry<Integer, Double> entry : topRankedDocs){
-            int doc = entry.getKey();
-            double prob = entry.getValue();
-            System.out.print(doc+"(" + prob +"), ");
+         for(TupleTwo<Document, Double> entry : topRankedDocs){
+            Document doc = entry._1();
+            double prob = entry._2();
+            System.out.print(doc.docIndex()+"(" + prob +"), ");
          }
          System.out.println();
 
          System.out.println("Top Ranked Words:");
-         for(Map.Entry<Integer, Double> entry : topRankedWords){
-            int word = entry.getKey();
-            double prob = entry.getValue();
-            System.out.print(method.wordAtIndex(word)+"(" + prob +"), ");
+         for(TupleTwo<String, Double> entry : topRankedWords){
+            String word = entry._1();
+            double prob = entry._2();
+            System.out.print(word+"(" + prob +"), ");
          }
          System.out.println();
       }
