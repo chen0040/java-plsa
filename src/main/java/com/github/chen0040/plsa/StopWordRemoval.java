@@ -287,7 +287,7 @@ public class StopWordRemoval {
                         "liked",
                         "likely",
                         "little",
-                        "ll", //added to avoid words like you'll,I'll etc.
+                        "ll", //added to avoid wordIndices like you'll,I'll etc.
                         "look",
                         "looking",
                         "looks",
@@ -516,7 +516,7 @@ public class StopWordRemoval {
                         "v",
                         "value",
                         "various",
-                        "ve", //added to avoid words like I've,you've etc.
+                        "ve", //added to avoid wordIndices like I've,you've etc.
                         "very",
                         "via",
                         "viz",

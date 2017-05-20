@@ -21,12 +21,12 @@ public class BasicDocument implements Document {
         this.words = new ArrayList<>(wordCounts.keySet());
     }
 
-    public Map<Integer, Integer> getWordCounts(){
+    public Map<Integer, Integer> indexedWordCount(){
         return wordCounts;
     }
 
 
-    @Override public List<Integer> words() {
+    @Override public List<Integer> wordIndices() {
         return words;
     }
 }

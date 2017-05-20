@@ -11,6 +11,6 @@ import java.util.Map;
  */
 public interface Document {
 
-    Map<Integer, Integer> getWordCounts();
-    List<Integer> words();
+    Map<Integer, Integer> indexedWordCount();
+    List<Integer> wordIndices();
 }

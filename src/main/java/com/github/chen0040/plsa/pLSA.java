@@ -274,7 +274,7 @@ public class pLSA {
             // E-step
             for(int doc = 0; doc < docCount; ++doc){
 
-                List<Integer> words = documents.get(doc).words();
+                List<Integer> words = documents.get(doc).wordIndices();
                 for(Integer word : words) {
                     for(int topic = 0; topic < topicCount; ++topic) {
                         double probability_of_topic_and_doc_and_word = probability_topic.get(topic)
@@ -296,7 +296,7 @@ public class pLSA {
                     double sum = 0;
                     for (int doc = 0; doc < docCount; ++doc) {
                         Document basicDocument = documents.get(doc);
-                        Map<Integer, Integer> wordCounts = basicDocument.getWordCounts();
+                        Map<Integer, Integer> wordCounts = basicDocument.indexedWordCount();
 
                         sum += probability_topic_given_doc_and_word.get(doc, word, topic) * wordCounts.getOrDefault(word, 0);
                     }
@@ -307,7 +307,7 @@ public class pLSA {
                 for(int doc = 0; doc < docCount; ++doc){
                     // update P (doc | topic) /prop sum_{word} (P(topic | word, doc) * count(word in doc))
                     double sum = 0;
-                    for(Map.Entry<Integer, Integer> entry : documents.get(doc).getWordCounts().entrySet()){
+                    for(Map.Entry<Integer, Integer> entry : documents.get(doc).indexedWordCount().entrySet()){
                         int word = entry.getKey();
                         sum += probability_topic_given_doc_and_word.get(doc, word, topic) * entry.getValue();
                     }
@@ -319,7 +319,7 @@ public class pLSA {
                 double sum = 0;
                 for(int doc = 0; doc < docCount; ++doc){
                     Document basicDocument = documents.get(doc);
-                    Map<Integer, Integer> wordCounts = basicDocument.getWordCounts();
+                    Map<Integer, Integer> wordCounts = basicDocument.indexedWordCount();
 
                     for(Map.Entry<Integer, Integer> entry : wordCounts.entrySet()){
                         int word = entry.getKey();
@@ -346,7 +346,7 @@ public class pLSA {
 
        for(int doc = 0; doc < m; ++doc){
            Document basicDocument = batch.get(doc);
-           Map<Integer, Integer> wordCounts = basicDocument.getWordCounts();
+           Map<Integer, Integer> wordCounts = basicDocument.indexedWordCount();
 
            for(Map.Entry<Integer, Integer> entry : wordCounts.entrySet()) {
                int word = entry.getKey();
