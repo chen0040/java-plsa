@@ -24,11 +24,11 @@ public class pLSAUnitTest {
 
    private static final Logger logger = LoggerFactory.getLogger(pLSAUnitTest.class);
 
-   private List<Document> getDocs() throws IOException {
+   private List<String> getDocs() throws IOException {
 
       InputStream inputStream = FileUtils.getResource("documents.txt");
 
-      List<Document> docs = new ArrayList<>();
+      List<String> docs = new ArrayList<>();
 
       BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
       reader.lines().forEach(line->{
@@ -41,8 +41,7 @@ public class pLSAUnitTest {
             text = fields[2];
          }
 
-         Document document = new BasicDocument(text);
-         docs.add(document);
+         docs.add(text);
       });
       reader.close();
 
@@ -51,11 +50,13 @@ public class pLSAUnitTest {
 
    @Test
    public void testPLSA() throws IOException {
-      List<Document> docs = getDocs();
+      List<String> docs = getDocs();
 
       pLSA method = new pLSA();
+      method.setStemmerEnabled(true);
+
       method.setMaxIters(10);
-      method.setMaxVocabularySize(100);
+      method.setMaxVocabularySize(1000);
       method.fit(docs);
 
       for(int topic = 0; topic < method.getTopicCount(); ++topic){

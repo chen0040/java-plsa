@@ -1,5 +1,11 @@
 package com.github.chen0040.plsa;
 
+import com.github.chen0040.data.text.BasicVocabulary;
+import com.github.chen0040.data.text.LowerCase;
+import com.github.chen0040.data.text.PorterStemmer;
+import com.github.chen0040.data.text.Vocabulary;
+import com.github.chen0040.data.utils.TupleTwo;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -19,19 +25,50 @@ public class pLSA {
 
     private static final Logger logger = LoggerFactory.getLogger(pLSA.class);
 
-    private double[][][] probability_topic_given_doc_and_word = null;
-    private double[] probability_topic = null;
-    private double[][] probability_doc_given_topic = null;
-    private double[][] probability_word_given_topic = null;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private SparseMatrix probability_topic_given_doc_and_word = null;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private SparseMatrix probability_topic = null;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private SparseMatrix probability_doc_given_topic = null;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private SparseMatrix probability_word_given_topic = null;
+
     private int topicCount = 20;
+
+    @Setter(AccessLevel.NONE)
     private int docCount = -1;
+    @Setter(AccessLevel.NONE)
     private int wordCount = -1;
-    private Vocabulary vocabulary;
-    private StopWordRemoval stopWordRemoval;
+
     private int maxIters = 100;
-    private Random random = new Random();
+    @Setter(AccessLevel.NONE)
     private double loglikelihood = Double.NEGATIVE_INFINITY;
     private int maxVocabularySize = 100;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Random random = new Random();
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Vocabulary vocabulary;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private StopWordRemoval stopWordRemoval;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private LowerCase lowerCase = new LowerCase();
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private PorterStemmer stemmer = new PorterStemmer();
+
+    private boolean removeNumbers = true;
+    private boolean removeIpAddress = true;
+    private boolean stemmerEnabled = false;
 
     public pLSA(){
         stopWordRemoval = new StopWordRemoval();
@@ -41,12 +78,6 @@ public class pLSA {
         return vocabulary.get(word);
     }
 
-    public int getDocCount() {
-        return docCount;
-    }
-
-
-
     public pLSA makeCopy() {
         pLSA clone = new pLSA();
         clone.copy(this);
@@ -55,10 +86,10 @@ public class pLSA {
     }
 
     public void copy(pLSA that){
-        this.probability_topic_given_doc_and_word = clone(that.probability_topic_given_doc_and_word);
-        this.probability_topic = clone(that.probability_topic);
-        this.probability_doc_given_topic = clone(that.probability_doc_given_topic);
-        this.probability_word_given_topic = clone(that.probability_word_given_topic);
+        this.probability_topic_given_doc_and_word = that.probability_topic_given_doc_and_word.makeCopy();
+        this.probability_topic = that.probability_topic.makeCopy();
+        this.probability_doc_given_topic = probability_doc_given_topic.makeCopy();
+        this.probability_word_given_topic = that.probability_word_given_topic.makeCopy();
         this.topicCount = that.topicCount;
         this.docCount = that.docCount;
         this.wordCount = that.wordCount;
@@ -66,16 +97,9 @@ public class pLSA {
         this.stopWordRemoval = that.stopWordRemoval.makeCopy();
         this.maxIters = that.maxIters;
         this.loglikelihood = that.loglikelihood;
-    }
-
-    private double[][][] clone(double[][][] rhs){
-        if(rhs==null) return null;
-        int m = rhs.length;
-        double[][][] clone = new double[m][][];
-        for(int i=0; i < m; ++i){
-            clone[i] = clone(rhs[i]);
-        }
-        return clone;
+        this.stemmerEnabled = that.stemmerEnabled;
+        this.removeIpAddress = that.removeIpAddress;
+        this.removeNumbers = that.removeNumbers;
     }
 
     private double[][] clone(double[][] rhs){
@@ -130,7 +154,7 @@ public class pLSA {
         final double[] probs = new double[topicCount];
         List<Integer> topic_orders = new ArrayList<Integer>();
         for(int topic = 0; topic < topicCount; ++topic){
-            probs[topic] = probability_topic[topic] * probability_doc_given_topic[topic][doc];
+            probs[topic] = probability_topic.get(topic) * probability_doc_given_topic.get(topic, doc);
             topic_orders.add(topic);
         }
 
@@ -149,7 +173,7 @@ public class pLSA {
         final double[] probs = new double[docCount];
         List<Integer> doc_orders = new ArrayList<>();
         for(int doc = 0; doc < docCount; ++doc){
-            probs[doc] = probability_doc_given_topic[topic][doc];
+            probs[doc] = probability_doc_given_topic.get(topic, doc);
             doc_orders.add(doc);
         }
 
@@ -168,7 +192,7 @@ public class pLSA {
         final double[] probs = new double[wordCount];
         List<Integer> word_orders = new ArrayList<Integer>();
         for(int word = 0; word < wordCount; ++word){
-            probs[word] = probability_word_given_topic[topic][word];
+            probs[word] = probability_word_given_topic.get(topic, word);
             word_orders.add(word);
         }
 
@@ -184,7 +208,25 @@ public class pLSA {
 
     }
 
-    public void fit(List<Document> documents){
+    public void fit(List<String> docs){
+
+        stopWordRemoval.setRemoveIPAddress(removeIpAddress);
+        stopWordRemoval.setRemoveNumbers(removeNumbers);
+
+        List<Document> documents = docs.stream().map(text -> {
+
+            List<String> words = BasicTokenizer.doTokenize(text);
+
+            words = lowerCase.filter(words);
+            words = stopWordRemoval.filter(words);
+
+            if(stemmerEnabled) {
+                words = stemmer.filter(words);
+            }
+
+            return new BasicDocument(text, words);
+
+        }).collect(Collectors.toList());
 
         if(vocabulary ==null) {
             buildVocab(documents);
@@ -193,37 +235,25 @@ public class pLSA {
         docCount = documents.size();
         wordCount = vocabulary.getLength();
 
-        probability_topic = new double[topicCount];
-        probability_doc_given_topic = new double[topicCount][];
-        probability_word_given_topic = new double[topicCount][];
-        probability_topic_given_doc_and_word = new double[docCount][][];
+        probability_topic = new SparseMatrix(topicCount);
+        probability_doc_given_topic = new SparseMatrix(topicCount, docCount);
+        probability_word_given_topic = new SparseMatrix(topicCount, wordCount);
+        probability_topic_given_doc_and_word = new SparseMatrix(docCount, wordCount, topicCount);
 
         for(int topic = 0; topic < topicCount; ++topic) {
-            probability_doc_given_topic[topic] = new double[docCount];
-            probability_topic[topic] = 1.0 / topicCount;
+            probability_topic.set(topic, 1.0 / topicCount);
 
             for(int doc = 0; doc < docCount; ++doc){
-                probability_doc_given_topic[topic][doc] = random.nextDouble();
+                probability_doc_given_topic.set(topic, doc, random.nextDouble());
             }
-            normalize(probability_doc_given_topic[topic]);
-
-            probability_word_given_topic[topic] = new double[wordCount];
+            probability_doc_given_topic.normalize(topic);
 
             for(int word = 0; word < wordCount; ++word){
-                probability_word_given_topic[topic][word] = random.nextDouble();
+                probability_word_given_topic.set(topic, word, random.nextDouble());
             }
-            normalize(probability_word_given_topic[topic]);
+            probability_word_given_topic.normalize(topic);
         }
 
-
-
-        for(int doc = 0; doc < docCount; ++doc){
-            probability_topic_given_doc_and_word[doc] = new double[wordCount][];
-
-            for(int word = 0; word < wordCount; ++word){
-                probability_topic_given_doc_and_word[doc][word] = new double[topicCount];
-            }
-        }
 
         for(int iters = 0; iters < maxIters; ++iters){
 
@@ -231,12 +261,12 @@ public class pLSA {
             for(int doc = 0; doc < docCount; ++doc){
                 for(int word = 0; word < wordCount; ++word) {
                     for(int topic = 0; topic < topicCount; ++topic) {
-                        probability_topic_given_doc_and_word[doc][word][topic] = probability_topic[topic]
-                                * probability_doc_given_topic[topic][doc]
-                                * probability_word_given_topic[topic][word];
+                        probability_topic_given_doc_and_word.set(doc, word, topic, probability_topic.get(topic)
+                                * probability_doc_given_topic.get(topic,doc)
+                                * probability_word_given_topic.get(topic, word));
                     }
 
-                    normalize(probability_topic_given_doc_and_word[doc][word]);
+                    probability_topic_given_doc_and_word.normalize(doc, word);
                 }
 
             }
@@ -253,11 +283,11 @@ public class pLSA {
                         Document basicDocument = documents.get(doc);
                         Map<String, Integer> wordCounts = basicDocument.getWordCounts();
 
-                        sum += probability_topic_given_doc_and_word[doc][word][topic] * wordCounts.getOrDefault(vocabulary.get(word), 0);
+                        sum += probability_topic_given_doc_and_word.get(doc, word, topic) * wordCounts.getOrDefault(vocabulary.get(word), 0);
                     }
-                    probability_word_given_topic[topic][word] = sum;
+                    probability_word_given_topic.set(topic, word, sum);
                 }
-                normalize(probability_word_given_topic[topic]);
+                probability_word_given_topic.normalize(topic);
 
                 for(int doc = 0; doc < docCount; ++doc){
                     Document basicDocument = documents.get(doc);
@@ -266,12 +296,12 @@ public class pLSA {
                     // update P (doc | topic) /prop sum_{word} (P(topic | word, doc) * count(word in doc))
                     double sum = 0;
                     for(int word = 0; word < wordCount; ++word){
-                        sum += probability_topic_given_doc_and_word[doc][word][topic] * wordCounts.getOrDefault(vocabulary.get(word), 0);
+                        sum += probability_topic_given_doc_and_word.get(doc, word, topic) * wordCounts.getOrDefault(vocabulary.get(word), 0);
                     }
 
-                    probability_doc_given_topic[topic][doc] = sum;
+                    probability_doc_given_topic.set(topic, doc, sum);
                 }
-                normalize(probability_doc_given_topic[topic]);
+                probability_doc_given_topic.normalize(topic);
 
                 double sum = 0;
                 for(int doc = 0; doc < docCount; ++doc){
@@ -279,15 +309,15 @@ public class pLSA {
                     Map<String, Integer> wordCounts = basicDocument.getWordCounts();
 
                     for(int word = 0; word < wordCount; ++word){
-                        sum += probability_topic_given_doc_and_word[doc][word][topic] * wordCounts.getOrDefault(vocabulary.get(word), 0);
+                        sum += probability_topic_given_doc_and_word.get(doc, word, topic) * wordCounts.getOrDefault(vocabulary.get(word), 0);
                     }
                 }
-                probability_topic[topic] = sum;
+                probability_topic.set(topic, sum);
 
             }
 
             // Normalize
-            normalize(probability_topic);
+            probability_topic.normalize();
 
             loglikelihood = calcLogLikelihood(documents);
 
@@ -309,9 +339,9 @@ public class pLSA {
                double sum = 0;
 
                for(int topic = 0; topic < topicCount; ++topic) {
-                   double value = probability_topic[topic]
-                           * probability_doc_given_topic[topic][doc]
-                           * probability_word_given_topic[topic][word];
+                   double value = probability_topic.get(topic)
+                           * probability_doc_given_topic.get(topic,doc)
+                           * probability_word_given_topic.get(topic, word);
                    sum += value;
                }
 
@@ -324,23 +354,6 @@ public class pLSA {
    }
 
 
-    private void normalize(double[] values){
-        int m = values.length;
-        double sum = sum(values);
-        if(sum > 0) {
-            for (int i = 0; i < m; ++i) {
-                values[i] /= sum;
-            }
-        }
-    }
-
-    private double sum(double[] values){
-        double sum = 0;
-        for(int i=0; i < values.length; ++i){
-            sum += values[i];
-        }
-        return sum;
-    }
 
 
 

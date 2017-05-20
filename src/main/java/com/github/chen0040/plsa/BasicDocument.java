@@ -13,11 +13,8 @@ public class BasicDocument implements Document {
 
     private final String text;
     private final Map<String, Integer> wordCounts = new HashMap<>();
-    public BasicDocument(String text){
+    public BasicDocument(String text, List<String> words){
         this.text = text;
-
-        List<String> words = BasicTokenizer.doTokenize(text);
-
         for(String word : words) {
             wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
         }
