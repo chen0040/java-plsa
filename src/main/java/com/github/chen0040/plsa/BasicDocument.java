@@ -34,7 +34,7 @@ public class BasicDocument implements Document {
         return words;
     }
 
-    public String getContent(){
+    public String content(){
         return text;
     }
 

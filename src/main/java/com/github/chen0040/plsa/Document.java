@@ -14,4 +14,5 @@ public interface Document {
     Map<Integer, Integer> indexedWordCount();
     List<Integer> wordIndices();
     int docIndex();
+    String content();
 }

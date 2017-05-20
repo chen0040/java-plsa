@@ -71,6 +71,7 @@ public class pLSAUnitTest {
             Document doc = entry._1();
             double prob = entry._2();
             System.out.print(doc.docIndex()+"(" + prob +"), ");
+            System.out.println(doc.content());
          }
          System.out.println();
 
@@ -82,6 +83,8 @@ public class pLSAUnitTest {
          }
          System.out.println();
       }
+
+      System.out.println("// ============================================= //");
 
       for(int doc = 0; doc < method.getDocCount(); ++doc){
          List<TupleTwo<Integer, Double>> topRankedTopics = method.getTopRankingTopics4Doc(doc, 3);
