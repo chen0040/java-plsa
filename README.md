@@ -20,7 +20,7 @@ Add the following dependency to your POM file:
  The sample code belows illustrates how to perform topic modelling using pLSA
  
  ```java
- List<String> docs = Arrays.asList("[doc-1-content]", "[doc-2-content]", ...);
+List<String> docs = Arrays.asList("[doc-1-content]", "[doc-2-content]", ...);
  
 pLSA method = new pLSA();
 method.setStemmerEnabled(true);
