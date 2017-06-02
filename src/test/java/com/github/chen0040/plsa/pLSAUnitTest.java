@@ -96,5 +96,9 @@ public class pLSAUnitTest {
          }
          System.out.println();
       }
+
+      // test clone
+      pLSA clone = method.makeCopy();
+
    }
 }

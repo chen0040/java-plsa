@@ -79,7 +79,7 @@ public class pLSA {
     public void copy(pLSA that){
         this.probability_topic_given_doc_and_word = that.probability_topic_given_doc_and_word.makeCopy();
         this.probability_topic = that.probability_topic.makeCopy();
-        this.probability_doc_given_topic = probability_doc_given_topic.makeCopy();
+        this.probability_doc_given_topic = that.probability_doc_given_topic.makeCopy();
         this.probability_word_given_topic = that.probability_word_given_topic.makeCopy();
         this.topicCount = that.topicCount;
         this.docCount = that.docCount;
